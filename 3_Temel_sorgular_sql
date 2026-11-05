@@ -1,0 +1,77 @@
+
+-- AÇIKLAMA: Tekil tablolar üzerinde filtreleme, sıralama, toplulaştırma ve gruplama (GROUP BY & HAVING) operasyonları.
+
+
+1. VERİ ARAMA VE FİLTRELEME (WHERE & LIKE & BETWEEN)
+
+-- Senaryo A: İletişim bilgisi olan fakat mail adresi eksik tedarikçileri listeleme
+SELECT 
+    FirmaAdi, 
+    YetkiliKisi, 
+    Telefon 
+FROM Tedarikciler 
+WHERE Telefon IS NOT NULL 
+  AND Mail IS NULL;
+
+-- Senaryo B: Belirli limitler dahilindeki kritik stok seviyesine sahip hammaddeleri bulma
+SELECT 
+    HammaddeAdi, 
+    Birim, 
+    MinStokMiktari 
+FROM Hammaddeler 
+WHERE MinStokMiktari BETWEEN 50 AND 200
+ORDER BY MinStokMiktari DESC;
+
+-- Senaryo C: Adında 'Gıda' ibaresi geçen tedarikçi firmaların tespiti
+SELECT * 
+FROM Tedarikciler 
+WHERE FirmaAdi LIKE '%Gıda%';
+
+
+2. METRİK HESAPLAMA VE ÖZET ÇIKARMA (AGGREGATE FUNCTIONS)
+
+-- Senaryo A: Aktif çalışanların ortalama maaş yükünü hesaplama
+SELECT 
+    COUNT(PersonelID) AS [Aktif Personel Sayısı],
+    SUM(Maas) AS [Aylık Toplam Maaş Gideri],
+    AVG(Maas) AS [Ortalama Personel Maaşı]
+FROM Personeller
+WHERE AyrilmaTarihi IS NULL;
+
+-- Senaryo B: Genel şirket giderleri içindeki en yüksek ve en düşük harcamayı bulma
+SELECT 
+    MAX(Tutar) AS [En Yüksek Tekil Gider],
+    MIN(Tutar) AS [En Düşük Tekil Gider],
+    AVG(Tutar) AS [Ortalama Harcama Tutarı]
+FROM Maliyetler;
+
+
+ 3. İLERİ DÜZEY GRUPLAMA VE RAPORLAMA (GROUP BY & HAVING)
+
+-- Senaryo A: Pozisyon bazlı İK maliyet analizi ve bütçe eşiği filtrelemesi
+SELECT 
+    Pozisyon, 
+    COUNT(PersonelID) AS [Pozisyondaki Çalışan Sayısı],
+    SUM(Maas) AS [Toplam Pozisyon Maliyeti],
+    AVG(Maas) AS [Pozisyon Ortalama Maaşı]
+FROM Personeller
+WHERE AyrilmaTarihi IS NULL
+GROUP BY Pozisyon
+HAVING SUM(Maas) > 30000;
+
+-- Senaryo B: Menüdeki kategorilerin fiyat performans analizi
+SELECT 
+    Kategori, 
+    COUNT(*) AS [Kategorideki Ürün Sayısı],
+    AVG(Fiyat) AS [Kategori Ortalama Fiyatı]
+FROM Urunler
+GROUP BY Kategori
+HAVING AVG(Fiyat) > 100
+ORDER BY [Kategori Ortalama Fiyatı] DESC;
+
+-- Senaryo C: Ödeme türlerine göre sipariş işlem hacimlerinin tespiti
+SELECT 
+    OdemeTuru, 
+    COUNT(*) AS [Toplam İşlem Adedi]
+FROM Siparisler
+GROUP BY OdemeTuru;

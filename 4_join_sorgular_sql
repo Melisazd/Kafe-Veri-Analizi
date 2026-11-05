@@ -1,0 +1,91 @@
+
+
+AÇIKLAMA: Çoklu tablolar arasında ilişkisel bağlar kurarak ciro, stok, İK ve finans operasyonlarının analiz edilmesi.
+
+
+1. SATIŞ VE MENÜ ANALİZİ (İKİLİ BİRLEŞTİRME)
+-- Senaryo: Sipariş detaylarındaki ürün ID'leri yerine, gerçek ürün isimlerini 
+-- ve birim fiyatlarını listeleme.
+SELECT 
+    sd.SiparisID,
+    u.UrunAdi AS [Ürün Adı],
+    sd.Adet AS [Satış Adedi],
+    sd.BirimFiyat AS [Anlık Satış Fiyatı]
+FROM SiparisDetay AS sd
+INNER JOIN Urunler AS u ON sd.UrunID = u.UrunID;
+
+
+2. CRM VE MÜŞTERİ SATIŞ DETAYLARI (ÜÇLÜ ZİNCİRLEME BİRLEŞTİRME)
+-- Senaryo: Hangi müşterinin, hangi üründen, kaç adet sipariş verdiğini tek bir raporda özetleme.
+SELECT 
+    m.Ad AS [Müşteri Adı],
+    m.Soyad AS [Müşteri Soyadı],
+    u.UrunAdi AS [Satın Alınan Ürün],
+    sd.Adet AS [Sipariş Miktarı]
+FROM Siparisler AS s
+INNER JOIN Musteriler AS m ON s.MusteriID = m.MusteriID
+INNER JOIN SiparisDetay AS sd ON s.SiparisID = sd.SiparisID
+INNER JOIN Urunler AS u ON sd.UrunID = u.UrunID;
+
+
+ 3. FİNANS VE GİDER ANALİZİ (LOOKUP MATCHING)
+-- Senaryo: Kasadan çıkan genel giderlerin hangi maliyet kalemine ait olduğunu 
+-- isimleriyle listeleme ve en yüksek harcamaya göre sıralama.
+SELECT 
+    m.Tutar AS [Harcama Tutarı],
+    m.Aciklama AS [Gider Açıklaması],
+    m.Tarih AS [Harcama Tarihi], 
+    mk.MaliyetKalemiAdi AS [Maliyet Kategorisi]
+FROM Maliyetler AS m
+INNER JOIN MaliyetKalemleri AS mk ON m.MaliyetKalemiID = mk.MaliyetKalemiID
+ORDER BY m.Tutar DESC;
+
+
+4. DEPO VE SATIN ALMA PERFORMANSI
+-- Senaryo: Satın alınan hammaddelerin miktarlarını, birim fiyatlarını ve hangi 
+-- tedarikçi firmadan alındığını en yakın tarihten başlayarak listeleme.
+SELECT 
+    ha.Miktar AS [Satın Alınan Miktar], 
+    ha.BirimFiyat AS [Alış Birim Fiyatı], 
+    ha.Tarih AS [Satın Alma Tarihi],
+    t.FirmaAdi AS [Tedarikçi Firma]
+FROM HammaddeAlislari AS ha
+INNER JOIN Tedarikciler AS t ON ha.TedarikciID = t.TedarikciID
+ORDER BY ha.Tarih DESC;
+
+
+ 5. OPERASYONEL STOK VE ENVENTER ANALİZİ
+-- Senaryo: Satın alınan sarf malzemelerin miktarlarını ve gerçek isimlerini 
+-- eşleştirerek toplam alış maliyetine göre en yüksekten sıralama.
+SELECT 
+    sma.Miktar AS [Alınan Miktar], 
+    sma.ToplamAlisFiyati AS [Toplam Harcanan Tutar],
+    sm.SarfMalzemeAdi AS [Malzeme Adı]
+FROM SarfMalzemeAlislari AS sma
+INNER JOIN SarfMalzemeler AS sm ON sma.SarfMalzemeID = sm.SarfMalzemeID
+ORDER BY sma.ToplamAlisFiyati DESC;
+
+
+ 6. OPERASYON VE MASA VERİMLİLİĞİ
+-- Senaryo: Alınan siparişlerin numaralarını, hangi masada ve hangi konumda (Bahçe/Teras vb.) 
+-- gerçekleştiğini bulma.
+SELECT 
+    s.SiparisNo AS [Sipariş Numarası], 
+    s.Tarih AS [Sipariş Zamanı], 
+    ma.MasaNo AS [Masa Numarası], 
+    ma.Konum AS [Masa Konumu]
+FROM Siparisler AS s
+INNER JOIN Masalar AS ma ON s.MasaID = ma.MasaID;
+
+
+7. İK VE SATIŞ PERFORMANS ANALİZİ
+-- Senaryo: Siparişleri alan personellerin isimlerini, soyisimlerini ve unvanlarını 
+-- satış hareketleriyle eşleştirme.
+SELECT 
+    s.SiparisNo AS [Sipariş No], 
+    s.Tarih AS [İşlem Tarihi], 
+    p.Ad AS [Personel Adı], 
+    p.Soyad AS [Personel Soyadı], 
+    p.Pozisyon AS [Personel Görevi]
+FROM Siparisler AS s
+INNER JOIN Personeller AS p ON s.PersonelID = p.PersonelID;

@@ -45,17 +45,4 @@ FROM (
 WHERE HarcamaTablosu.[ToplamHarcama] > 250000;
 
 
- SENARYO 4: Sipariş İçi Seviye Analizi (Correlated Subquery)
-
- Soru: Her sipariş kaleminde satılan ürün adedinin, o siparişin kendi 
- içindeki ortalama ürün adedinden fazla olduğu durumları nasıl listeleriz?
-Mantık: İçerideki sorgu, dışarıdaki sorgunun satırına (SiparisID) bağımlı olarak satır satır çalışır ve dinamik bir kıyaslama sunar.
-
-SELECT dis.SiparisDetayID, dis.SiparisID, dis.UrunID, dis.Adet, dis.BirimFiyat 
-FROM SiparisDetay AS dis 
-WHERE Adet > (
-    SELECT AVG(ic.Adet) 
-    FROM SiparisDetay AS ic 
-    WHERE ic.SiparisID = dis.SiparisID
-);
 

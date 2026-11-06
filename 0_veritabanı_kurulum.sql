@@ -1,18 +1,17 @@
--- Mihver Kafe Veritabanı Oluşturma Scripti
--- Oluşturan: Salih Hocaoğlu | EXCEL 751
--- Türk gençlerinin gelişimine katkı sağlamak amacı ile hazırlanmıştır.
+--  Kafe Veritabanı Oluşturma Scripti
 
-IF EXISTS (SELECT * FROM sys.databases WHERE name = 'Mihver')
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'test_kafe')
 BEGIN
     ALTER DATABASE Mihver SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE Mihver;
+    DROP DATABASE test_kafe;
 END
 GO
 
-CREATE DATABASE Mihver;
+CREATE DATABASE test_kafe;
 GO
 
-USE Mihver;
+USE test_kafe;
 GO
 
 CREATE TABLE Masalar (

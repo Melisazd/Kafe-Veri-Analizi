@@ -1,44 +1,41 @@
+-- BÖLÜM 4: PENCERE FONKSİYONLARI VE KÜME OPERATÖRLERİ (UNION ALL)
 
- BÖLÜM 4: PENCERE FONKSİYONLARI VE KÜME OPERATÖRLERİ (UNION ALL)
-
- Bu bölümde, satır detayını kaybetmeden analitik hesaplamalar (Window Functions) ve farklı tablolardaki verileri alt alta birleştirme (UNION ALL) teknikleri uygulanmıştır.
-
---SENARYO 1: Ürün Fiyat Sıralama Analizi (ROW_NUMBER)
-
+-- SENARYO 1: Ürün Fiyat Sıralama Analizi (ROW_NUMBER)
 SELECT 
     UrunID, 
     UrunAdi, 
     Fiyat,
     ROW_NUMBER() OVER (ORDER BY Fiyat DESC) AS [FiyatSiraNo]
 FROM dbo.Urunler;
--- SENARYO 2: Sipariş Bazlı Satış Trend Analizi (JOIN + LAG)
 
+
+-- SENARYO 2: Sipariş Bazlı Satış Trend Analizi (JOIN + LAG)
+-- Satır bazlı detay korunarak bir önceki sipariş tutarı pencere fonksiyonuyla yanına yazdırılmıştır.
 SELECT 
-    Siparisler.Tarih,
-    Siparisler.SiparisID, 
-    SiparisDetay.Adet, 
-    SiparisDetay.BirimFiyat,
-    Siparisler.IndirimOrani,
-    (SiparisDetay.Adet * SiparisDetay.BirimFiyat) * (1 - (Siparisler.IndirimOrani / 100.0)) AS [MevcutSiparisNetTutari],
-    LAG((SiparisDetay.Adet * SiparisDetay.BirimFiyat) * (1 - (Siparisler.IndirimOrani / 100.0))) OVER (ORDER BY Siparisler.Tarih ASC) AS [BirOncekiSiparisNetTutari]
-FROM dbo.Siparisler 
-INNER JOIN dbo.SiparisDetay ON Siparisler.SiparisID = SiparisDetay.SiparisID;
+    s.Tarih,
+    s.SiparisID, 
+    sd.Adet, 
+    sd.BirimFiyat,
+    s.IndirimOrani,
+    (sd.Adet * sd.BirimFiyat) * (1 - (ISNULL(s.IndirimOrani, 0) / 100.0)) AS [MevcutSiparisNetTutari],
+    LAG((sd.Adet * sd.BirimFiyat) * (1 - (ISNULL(s.IndirimOrani, 0) / 100.0))) OVER (ORDER BY s.Tarih ASC, s.SiparisID ASC) AS [BirOncekiSiparisNetTutari]
+FROM dbo.Siparisler AS s
+INNER JOIN dbo.SiparisDetay AS sd ON s.SiparisID = sd.SiparisID;
+
 
 -- SENARYO 3: Nakit Akış ve Kasa Çıkış Analizi (UNION ALL)
-
--- Mantık: Müşteri indirimleri ile hammadde harcamaları kolon sayıları 
--- ve veri tipleri eşitlenerek tek bir büyük rapor halinde alt alta birleştirilmiştir.
-
+-- Sütun türlerinin (TL cinsinden) ve isimlerinin şemaya göre eşitlenerek birleştirilmesi.
 SELECT 
-    Siparisler.Tarih AS [IslemTarihi], 
-    Siparisler.IndirimOrani AS [HarcamaTutari],
-    'Müşteri İndirimi' AS [IslemTipi]
-FROM dbo.Siparisler
+    s.Tarih AS [IslemTarihi], 
+    (sd.Adet * sd.BirimFiyat) * (ISNULL(s.IndirimOrani, 0) / 100.0) AS [HarcamaTutari], -- Oran tutara (TL) çevrildi
+    N'Müşteri İndirimi (Feragat Edilen Gelir)' AS [IslemTipi]
+FROM dbo.Siparisler AS s
+INNER JOIN dbo.SiparisDetay AS sd ON s.SiparisID = sd.SiparisID
 
 UNION ALL
 
 SELECT 
-    HammaddeAlislari.AlisTarihi AS [IslemTarihi], 
-    HammaddeAlislari.AlisTutari AS [HarcamaTutari],
-    'Hammadde Alımı' AS [IslemTipi]
+    Tarih AS [IslemTarihi], 
+    ToplamAlisFiyati AS [HarcamaTutari], -- Şemadaki doğru sütun adı yazıldı
+    N'Hammadde Alımı' AS [IslemTipi]
 FROM dbo.HammaddeAlislari;

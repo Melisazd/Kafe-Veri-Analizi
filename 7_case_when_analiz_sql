@@ -1,22 +1,22 @@
+-- BÖLÜM 3: CASE WHEN (ŞARTLI MANTIK VE SEGMENTASYON) İLE ANALİZ 
 
-BÖLÜM 3: CASE WHEN (ŞARTLI MANTIK VE SEGMENTASYON) İLE ANALİZ Bu bölümde, ham verileri iş kurallarına göre anlamlı segmentlere 
-ve raporlama etiketlerine dönüştürmek için CASE WHEN yapısı çalışılmıştır.
-
-SENARYO 1: Ürün ve Hammadde Stok Durum Analizi (JOIN + CASE WHEN)
+SENARYO 1: Hammadde Stok Durum Analizi (Tek Tablo Üzerinde CASE WHEN ve Segmentasyon)
+-- Bağımsız hammadde tablosu üzerinden kritik stok durumlarının etiketlenmesi
 
 SELECT 
-    Urunler.UrunID,
-    Urunler.UrunAdi,
-    Hammaddeler.MinStokMiktari,
+    HammaddeID,
+    HammaddeAdi,
+    MinStokMiktari,
     CASE 
-        WHEN Hammaddeler.MinStokMiktari < 5 THEN 'stok 5 in altında'
-        WHEN Hammaddeler.MinStokMiktari >= 5 AND Hammaddeler.MinStokMiktari <= 20 THEN 'normal seviye'
-        ELSE 'güvenli stok hacmi'
-    END AS [stok durumu]
-FROM dbo.Urunler
-INNER JOIN dbo.Hammaddeler ON Urunler.UrunID = Hammaddeler.HammaddeId;
+        WHEN MinStokMiktari < 5 THEN 'Kritik Seviye (Stok 5 Altında)'
+        WHEN MinStokMiktari >= 5 AND MinStokMiktari <= 20 THEN 'Normal Seviye'
+        ELSE 'Güvenli Stok Hacmi'
+    END AS [Stok Durumu]
+FROM dbo.Hammaddeler;
+
 
 SENARYO 2: Personel Maaş ve Kıdem Analizi (Tek Tablo Üzerinde CASE WHEN)
+-- Mevcut personel maaş skalasına göre unvan ve segmentasyon analizi
 
 SELECT 
     PersonelID, 
